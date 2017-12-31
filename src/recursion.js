@@ -251,7 +251,32 @@ var divide = function(x, y) {
 // gcd(4,36); // 4
 // http://www.cse.wustl.edu/~kjg/cse131/Notes/Recursion/recursion.html
 // https://www.khanacademy.org/computing/computer-science/cryptography/modarithmetic/a/the-euclidean-algorithm
+window.originalX = null;
 var gcd = function(x, y) {
+	// always have x be smaller than y, to make it easier. not a base case
+	if (x > y) {
+		let temp = x;
+		x = y;
+		y = temp;
+	}
+
+	// keep record of original x value
+	if (window.originalX === null) {
+		window.originalX = x;
+	}
+
+	// base cases
+	if (y < 0 || x < 0) {
+		return null;
+	} else if (y % x === 0 && originalX % x === 0) {
+		window.originalX = null;
+		return x;
+	} 
+
+	// keep counting down x until u find a GCD. 
+	return gcd(x - 1, y);
+
+	// euclid's and dijkstra's algorithms are so insane!! 
 };
 
 // 15. Write a function that compares each character of two strings and returns true if
@@ -353,6 +378,18 @@ var rMap = function(array, callback) {
 // countKeysInObj(obj, 'r') // 1
 // countKeysInObj(obj, 'e') // 2
 var countKeysInObj = function(obj, key) {
+	let count = 0;
+
+	for (let k in obj) {
+		if (k === key) {
+			count++;
+		} 
+		if (typeof obj[k] === 'object' && !Array.isArray(obj[k])) {
+			count += countKeysInObj(obj[k], key);
+		}
+	}	
+
+	return count;
 };
 
 // 23. Write a function that counts the number of times a value occurs in an object.
@@ -360,11 +397,36 @@ var countKeysInObj = function(obj, key) {
 // countValuesInObj(obj, 'r') // 2
 // countValuesInObj(obj, 'e') // 1
 var countValuesInObj = function(obj, value) {
+	let count = 0;
+
+	for (let key in obj) {
+		if (obj[key] === value) {
+			count++;
+		} 
+		if (typeof obj[key] === 'object' && !Array.isArray(obj[key])) {
+			count += countValuesInObj(obj[key], value);
+		}
+	}	
+
+	return count;
 };
 
 // 24. Find all keys in an object (and nested objects) by a provided name and rename
 // them to a provided new name while preserving the value stored at that key.
 var replaceKeysInObj = function(obj, oldKey, newKey) {
+	// if new key already existing, it gets replaced, with this algorithm. 
+	for (let key in obj) {
+		if (key === oldKey) {
+			obj[newKey] = typeof obj[key] === 'object' && !Array.isArray(obj[key]) ? 
+				replaceKeysInObj(obj[key], oldKey, newKey) : obj[key];
+			delete obj[oldKey];
+		} else {
+			obj[key] = typeof obj[key] === 'object' && !Array.isArray(obj[key]) ? 
+				replaceKeysInObj(obj[key], oldKey, newKey) : obj[key];
+		}
+	}
+
+	return obj;
 };
 
 // 25. Get the first n Fibonacci numbers. In the Fibonacci sequence, each subsequent
@@ -373,6 +435,15 @@ var replaceKeysInObj = function(obj, oldKey, newKey) {
 // fibonacci(5); // [0,1,1,2,3,5]
 // Note: The 0 is not counted.
 var fibonacci = function(n) {
+	if (n <= 0) {
+		return null;
+	} else if (n === 1) {
+		return [0, 1];
+	}
+
+	let prev = fibonacci(n - 1);
+
+	return prev.concat([prev[prev.length - 1] + prev[prev.length - 2]]);
 };
 
 // 26. Return the Fibonacci number located at index n of the Fibonacci sequence.
@@ -381,17 +452,38 @@ var fibonacci = function(n) {
 // nthFibo(7); // 13
 // nthFibo(3); // 2
 var nthFibo = function(n) {
+	if (n < 0) {
+		return null;
+	} else if (n <= 1) {
+		return n;
+	}
+
+	return nthFibo(n - 1) + nthFibo(n - 2);
 };
 
 // 27. Given an array of words, return a new array containing each word capitalized.
 // var words = ['i', 'am', 'learning', 'recursion'];
 // capitalizedWords(words); // ['I', 'AM', 'LEARNING', 'RECURSION']
 var capitalizeWords = function(array) {
+	if (array.length === 0) {
+		return [];
+	} else if (array.length === 1) {
+		return array[0] === '' ? '' : [array[0].toUpperCase()];
+	}
+
+	return capitalizeWords([array[0]]).concat(capitalizeWords(array.slice(1, array.length)));
 };
 
 // 28. Given an array of strings, capitalize the first letter of each index.
 // capitalizeFirst(['car','poop','banana']); // ['Car','Poop','Banana']
 var capitalizeFirst = function(array) {
+	if (array.length === 0) {
+		return [];
+	} else if (array.length === 1) {
+		return array[0] === '' ? '' : [array[0][0].toUpperCase() + array[0].slice(1, array[0].length)];
+	}
+
+	return capitalizeFirst([array[0]]).concat(capitalizeFirst(array.slice(1, array.length)));	
 };
 
 // 29. Return the sum of all even numbers in an object containing nested objects.
@@ -404,16 +496,48 @@ var capitalizeFirst = function(array) {
 // };
 // nestedEvenSum(obj1); // 10
 var nestedEvenSum = function(obj) {
+	let sum = 0;
+
+	for (let key in obj) {
+		if (typeof obj[key] === 'number') {
+			sum += obj[key] % 2 === 0 ? obj[key] : 0;
+		} else if (typeof obj[key] === 'object' && !Array.isArray(obj[key])) {
+			sum += nestedEvenSum(obj[key]);
+		}
+	}
+
+	return sum;
 };
 
 // 30. Flatten an array containing nested arrays.
 // flatten([1,[2],[3,[[4]]],5]); // [1,2,3,4,5]
 var flatten = function(array) {
+	if (array.length === 0) {
+		return [];
+	} else if (array.length === 1) {
+		if (!Array.isArray(array[0])) {
+			return [array[0]];
+		} 
+		return flatten(array[0]);
+	}
+
+	return flatten([array[0]]).concat(flatten(array.slice(1, array.length)));
 };
 
 // 31. Given a string, return an object containing tallies of each letter.
 // letterTally('potato'); // {p:1, o:2, t:2, a:1}
-var letterTally = function(str, obj) {
+var letterTally = function(str, obj = {}) {
+	if (str === '') {
+		return obj;
+	}
+
+	if (obj[str[0]] === undefined) {
+		obj[str[0]] = 1;
+	} else {
+		obj[str[0]]++;
+	}
+
+	return letterTally(str.slice(1, str.length), obj);
 };
 
 // 32. Eliminate consecutive duplicates in a list. If the list contains repeated
@@ -422,6 +546,16 @@ var letterTally = function(str, obj) {
 // compress([1,2,2,3,4,4,5,5,5]) // [1,2,3,4,5]
 // compress([1,2,2,3,4,4,2,5,5,5,4,4]) // [1,2,3,4,2,5,4]
 var compress = function(list) {
+	//NOTE: this rough-draft algorithm only works if the first index of list is not a duplicate.  
+	if (list.length === 0) {
+		return [];
+	} else if (list.length === 1) {
+		return [list[0]];
+	} else if (list[0] === list[1]) {
+			return compress(list.slice(1, list.length));
+	}
+
+	return [list[0]].concat(compress(list.slice(1, list.length)));
 };
 
 // 33. Augument every element in a list with a new value where each element is an array
@@ -439,6 +573,7 @@ var augmentElements = function(array, aug) {
 // minimizeZeroes([2,0,0,0,1,4]) // [2,0,1,4]
 // minimizeZeroes([2,0,0,0,1,0,0,4]) // [2,0,1,0,4]
 var minimizeZeroes = function(array) {
+	//NOTE: this rough-draft algorithm only works if the first index of array is not in a series of 0's. 
 	if (array.length === 0) {
 		return [];
 	} else if (array.length === 1) {
@@ -588,4 +723,34 @@ let merge = function(arr1, arr2) {
 // console.log(obj2); // {a:1,b:{bb:{bbb:2}},c:3}
 // obj1 === obj2 // false
 var clone = function(input) {
+	if (typeof input === 'object') {
+		if (Array.isArray(input)) {
+			let cloned = [];
+			if (input.length === 0) {
+				return input;
+			}
+			input.forEach(item => {
+				cloned.push(clone(item));
+			});
+			return cloned;
+		} else {
+			let cloned = {};
+			if (Object.keys(input).length === 0) {
+				return input;
+			}
+			for (let key in input) {
+				cloned[key] = clone(input[key]);
+			}
+			return cloned;
+		}
+	} else {
+		return input;
+	} 
 };
+
+
+
+
+
+
+
