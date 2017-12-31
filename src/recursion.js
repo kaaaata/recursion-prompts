@@ -428,12 +428,26 @@ var compress = function(list) {
 // itself.
 // augmentElements([[],[3],[7]], 5); // [[5],[3,5],[7,5]]
 var augmentElements = function(array, aug) {
+	if (array.length === 0) {
+		return [];
+	}
+
+	return [array[0].concat([aug])].concat(augmentElements(array.slice(1, array.length), aug));
 };
 
 // 34. Reduce a series of zeroes to a single 0.
 // minimizeZeroes([2,0,0,0,1,4]) // [2,0,1,4]
 // minimizeZeroes([2,0,0,0,1,0,0,4]) // [2,0,1,0,4]
 var minimizeZeroes = function(array) {
+	if (array.length === 0) {
+		return [];
+	} else if (array.length === 1) {
+		return [array[0]];
+	} else if (array[0] === 0 && array[1] === 0) {
+			return minimizeZeroes(array.slice(1, array.length));
+	}
+
+	return [array[0]].concat(minimizeZeroes(array.slice(1, array.length)));
 };
 
 // 35. Alternate the numbers in an array between positive and negative regardless of
@@ -441,35 +455,132 @@ var minimizeZeroes = function(array) {
 // alternateSign([2,7,8,3,1,4]) // [2,-7,8,-3,1,-4]
 // alternateSign([-2,-7,8,3,-1,4]) // [2,-7,8,-3,1,-4]
 var alternateSign = function(array) {
+	if (array.length === 0) {
+		return [];
+	} else if (array.length === 1) {
+		return [Math.abs(array[0])];
+	}
+
+	return alternateSign(array.slice(0, array.length - 1)).concat(
+		(array.length % 2 === 0 ? -1 : 1) * alternateSign([array[array.length - 1]]));
 };
 
 // 36. Given a string, return a string with digits converted to their word equivalent.
 // Assume all numbers are single digits (less than 10).
 // numToText("I have 5 dogs and 6 ponies"); // "I have five dogs and six ponies"
 var numToText = function(str) {
+	let arr = str.split(' ');
+	if (arr.length === 0) {
+		return '';
+	} else if (arr.length === 1) {
+		switch (arr[0]) {
+		default: 
+	  	return arr[0];
+	  case '0':
+	  	return 'zero';
+	  case '1':
+	  	return 'one';
+	  case '2':
+	  	return 'two';
+	  case '3':
+	  	return 'three';
+	  case '4':
+	  	return 'four';
+	  case '5':
+	  	return 'five';
+	  case '6':
+	  	return 'six';
+	  case '7':
+	  	return 'seven';
+	  case '8':
+	  	return 'eight';
+	  case '9':
+	  	return 'nine';
+		}
+	}
+
+	return numToText(arr[0]) + ' ' + numToText(arr.slice(1, arr.length).join(' '));
 };
 
 
 // *** EXTRA CREDIT ***
 
 // 37. Return the number of times a tag occurs in the DOM.
-var tagCount = function(tag, node) {
+var tagCount = function(tag, node = document) {
+	let tagged = node.getElementsByTagName(tag);
 
+	/*
+	cat says: why do we need to use recursion at all? getElementsByTagName is inherently a recursive search. very confusing...
+	*/
+	for (let i = 0; i < tagged.length; i++) {
+		tagCount(tag, tagged[i]);
+	}
+
+	return tagged.length;
 };
 
 // 38. Write a function for binary search.
 // var array = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
 // binarySearch(array, 5) // 5
 // https://www.khanacademy.org/computing/computer-science/algorithms/binary-search/a/binary-search
-var binarySearch = function(array, target, min, max) {
+//var binarySearch = function(array, target, min, max) {
+var binarySearch = function(array, target, index = 0) {
+	if (array.length === 0) {
+		return null;
+	} else if (array.length === 1) {
+		return array[0] === target ? index : null;
+	}
+
+	let mid = ~~(array.length / 2);
+	let left = array.slice(0, mid);
+	let right = array.slice(mid, array.length);
+	
+	if (target >= left[0] && target <= left[left.length - 1]) {
+		return binarySearch(left, target, index);
+	} else if (target >= right[0] && target <= right[right.length - 1]) {
+		return binarySearch(right, target, index += mid);
+	} else {
+		return null;
+	}
 };
 
 // 39. Write a merge sort function.
 // mergeSort([34,7,23,32,5,62]) // [5,7,23,32,34,62]
 // https://www.khanacademy.org/computing/computer-science/algorithms/merge-sort/a/divide-and-conquer-algorithms
 var mergeSort = function(array) {
+	if (array.length <= 1) {
+		return array;
+	}
 
+	let mid = ~~(array.length / 2);
+	let left = mergeSort(array.slice(0, mid));
+	let right = mergeSort(array.slice(mid, array.length));
+
+	return merge(left, right);
 };
+// 'merge' take two sorted array and merge them. 
+let merge = function(arr1, arr2) {
+	let merged = [];
+
+	// cannot use !arr1[0] or !arr2[0] because sometimes arr1[0] === 0 which is valid
+	while (true) {
+		if (arr1[0] === undefined && arr2[0] === undefined) {
+			break;
+		} else if (arr1[0] === undefined && arr2[0] !== undefined) {
+			merged.push(arr2.shift());
+		} else if (arr1[0] !== undefined && arr2[0] === undefined) {
+			merged.push(arr1.shift());
+		} else {
+			if (arr1[0] <= arr2[0]) {
+				merged.push(arr1.shift());
+			} else {
+				merged.push(arr2.shift());
+			}
+		}
+	}
+
+	return merged;
+}
 
 // 40. Deeply clone objects and arrays.
 // var obj1 = {a:1,b:{bb:{bbb:2}},c:3};
